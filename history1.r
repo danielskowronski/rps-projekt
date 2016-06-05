@@ -1,11 +1,10 @@
-filename <- "C:\Users\Krzysiek\Documents\rps_projekt\first100"
 filename <- "C:\\Users\\Krzysiek\\Documents\\rps_projekt\\first100"
 file <- read.csv(filename)
 file
 file
 file <- read.csv(filename)
 file
-filename_full <- "C:\\Users\\Krzysiek\\Documents\\rps_projekt\\wyczyszczone_dane.csv"
+filename_full <- "C:\\Users\\Krzysiek\\Documents\\rps_projekt\\rps-projekt\\wyczyszczone_dane.csv"
 file_full <- read.csv(filename_full)
 head file_full, n=100
 head (file_full, n=100)
