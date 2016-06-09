@@ -46,21 +46,43 @@ sprawdzenie poprawności danych (kompletność rekordów, poprawność wartości
 
 ...
 Poprawność danych weryfikowaliśmy tworząc wyrażenie regularne - dzięi temu zidentyfikowaliśmy właściwy format ID użytkownika - (user|test)\d* - bez tego analiza w R byłaby zaburzona.
+Nie wykryliśmy również brakujących danych-nasz regexp, którym opisaliśmy jakich lini się spodziewamy miał tyle samo dopasowań, ile w pliku znajdowało się wszystkich linii.
 
 Celem łatwiejszego importu i prostszej obróbki danych w R plik log_phase8 przeparsowaliśmy skryptem w języku perl, który ciął każdy rekord na interesujace nas pola i zapisywał je do formatu CSV zawerającego kolumny: date, etypes, ip, authtime, user. Tym samym rozmiar pliku wejściowego został znacząco zredukowany.
 
-Z powodu ze dany w logu nie zawierały lat skonwertowaliśmy authtime na obiekt R'a POSIXct, a następnie wygenerowaliśmy wykresy które pozwoliły nam sprawdzić na jakim przedziale dat pracujemy. Na tym poziomie nie usuwamy żanych danych - będziemy to robić podczas analizy konkretnych problemów, ponieważ dla różnych problemów mogą być różne progi wartości odstających. Np. jeśli chcemy analizować ilość logowań w danym miesiącu to miesiące niepełne (brzegowe - wrzesień 2008 i luty 2016) zostałyby odrzucone. Odrzucilibyśmy w ten sam sposób kilkanaście pełnych dni, które dla analizy według dni są jak najbardziej poprawne. 
+[Z powodu ze dany w logu nie zawierały lat skonwertowaliśmy authtime na obiekt R'a POSIXct, a następnie wygenerowaliśmy wykresy które pozwoliły nam sprawdzić na jakim przedziale dat pracujemy. //do poprawki, skoro lata dodajemy do pierwszej kolumny]
+Na tym poziomie nie usuwamy żanych danych - będziemy to robić podczas analizy konkretnych problemów, ponieważ dla różnych problemów mogą być różne progi wartości odstających. Np. jeśli chcemy analizować ilość logowań w danym miesiącu to miesiące niepełne (brzegowe - wrzesień 2008 i luty 2016) zostałyby odrzucone. Odrzucilibyśmy w ten sam sposób kilkanaście pełnych dni, które dla analizy według dni są jak najbardziej poprawne. 
 
 5.	Agregacja i transformacja danych (5p)
 opisać czy agregacja danych jest konieczna, a jeśli tak, to jak agregować dane i co dzięki temu osiągniemy; opisać inne niezbędne przekształcenia danych (np. stworzenie wartości liczby dni na podstawie dwóch pól z datą: "od" i "do", zamiana danych liczbowych na kategoryjne, wyliczanie wartości pochodnych, np. pole=wysokość*szerokość itp.), wraz z uzasadnieniem konieczności ich przeprowadzenia; opisać wszelkie niezbędne syntaktyczne transformacje danych, tzn. ich przekształcanie bez zmiany ich znaczenia wraz z uzasadnieniem; przedstawić w czytelnej, graficznej postaci proces tej wstępnej obróbki danych opisanej w punktach 4-5.
 
 ...
-Agregacja potrzebna jest dla każdego problemu z osobna - np. celem analizy najpopularniejszych godzin logowania dokonujemy takowej wg. pola godziny z obiektu POSIXct.
+Agregacja potrzebna jest dla każdego problemu z osobna - np. celem analizy najpopularniejszych godzin logowania dokonujemy takowej wg. pola godziny z obiektu POSIXct. Zagregowaliśmy czasy logowań według godzin, dni roku, dni tygodnia, miesiecy i lat, etypes [jeszce cos] i z takich danych stworzyliśmy wykresy.
+
+Ponieważ daty logowań nie zawierały roku (a z timestampów w authtime wynika, że dane są z okresłu dłuższego niż jeden rok) postanowiliśmy dodać rok wyliczony z authtime do pierwszej kolumy. [//Daniel-może jedno, dwa zdania nt. jak to zrobiłes?]
+
+Utowrzyliśmy również wektor czasów pomiędzy logowaniami do systemu 
+[
+shift <- function (x, shift) c(rep(NA,times=shift), x[1:(length(x)-shift)])
+differences <- file_full$authtime - shift(file_full$authtime, 1)
+plot (differences)
+//to je przykład na timestampach, gdy będzie porządna data, trzeba na niej zrobić
+]
 
 6.	Eksploracja danych (8p)
 statystyki opisowe (również w formie graficznej), histogramy, rozkłady wartości dla poszczególnych cech, zmiana wartości danych w czasie, korelacje pomiędzy atrybutami oraz próba wyjaśnienia ich pochodzenia, odkrywanie innego rodzaju zależności, np. trendów
 
 ...
+
+wykresy: [//opisać według opisu z wzoru]
+logowania według dni roku
+logowania według miesięcy
+logowania według lat [wzrost liczby logowań-rozkład normalny?]
+logowania według dni tygodnia
+logowania według godzin 
+encoding typów
+[//można zrobić wykresy różnych ip według dni-jeszcze nie wiem jak]
+czasy między logowaniami [tutaj będzie hipoteza o wykładniczym rozkładzie, pewnie odrzucenie wartości odstających (IQR)]
 
 7.	Hipotezy badawcze (10p)
 na podstawie analiz z punktów 3-6 oraz zrozumienia dziedziny biznesowej problemu, jakiego zbiór danych dotyczy, opisać jakiego rodzaju problemy mogą być poddane badaniu i jakie hipotezy badawcze można postawić (np.: hipoteza o wartości parametru populacji, o określonym typie rozkładu danej cechy, o korelacji i innego rodzaju zależnościach itp.); w przypadku hipotez o rozkładach uzasadnić postawienie hipotezy zarówno podpierając się analizami z punktu 6, jak i ogólną teorią mówiącą, że danego typu zdarzenia powinny podlegać określonym rozkładom (np. czas między zgłoszeniami do systemu zwykle ma rozkład wykładniczy, liczba zdarzeń rzadkich w systemie - rozkład Poissona, wzrost w populacji ludzi - rozkład normalny itp.)
