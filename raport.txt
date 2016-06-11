@@ -79,7 +79,6 @@ logowania według lat [wzrost liczby logowań-rozkład normalny?]
 logowania według dni tygodnia
 logowania według godzin 
 encoding typów
-[//można zrobić wykresy różnych ip według dni-jeszcze nie wiem jak]
 czasy między logowaniami [tutaj będzie hipoteza o wykładniczym rozkładzie, pewnie odrzucenie wartości odstających (IQR)]
 
 7.	Hipotezy badawcze (10p)
@@ -87,10 +86,16 @@ na podstawie analiz z punktów 3-6 oraz zrozumienia dziedziny biznesowej problem
 
 ...
 
+Na podstawie wyglądu wykresu differences_trimmed, oraz faktu, że zawiera on czasy między kolejnymi zgłoszeniami do systemu, przyjmujemy hipotezę, że dane te mają rozkład wykładniczy(H0=rozkład differences_trimmed jest wykłądniczy).
+
+
 8.	Weryfikacja hipotez (10p)
 opisać zastosowane testy statystyczne (parametryczne oraz nieparametryczne), wraz z weryfikacją ich założeń oraz ich wyniki i interpretację tych wyników w odniesieniu do postawionych hipotez badawczych; uzasadnić zastosowanie określonych testów
 
 ...
+
+Dla danych zgromadzonych w wektorze differences_trimmed zastosowaliśmy test Kolmogorov-Smirnov-ze względu na charakterystykę danych test Chi kwadrat mógł nie dać wiarygodnych wyników-potwierdził to pakiet R zwracając informację: "In chisq.test(differences_trimmed/sum(differences_trimmed), p = tmp/sum(tmp)) : Chi-squared approximation may be incorrect". Mimo danych i wykresu sugerujących rozkłąd wykładniczy, test statystyczny nie pozwolił przyjąć że hipoteza zerowa (H0=rozkład differences_trimmed jest wykłądniczy) jest prawdziwa.
+Poprawność wykonywania tego testu potwierdziliśmy na danych kontrolnych-odpowiednio wysokie p-value wskazuje, że losowo wygenerowany rozkład wykłądniczy zostaje potwierdzony przez tą samą procedurę. 
 
 9.	Wnioski (5p)
 wykorzystując obserwacje i analizy z poprzednich punktów opisać wnioski z badań, ale językiem biznesowym, czyli językiem dziedziny, której dotyczą dane (np. dane logów z serwera mogą dotyczyć zachowań użytkowników tego serwera; dane ze sklepu - zachowań klientów itd.)
