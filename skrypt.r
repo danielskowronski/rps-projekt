@@ -49,6 +49,7 @@ differences_ubound <- differences_Q3+(differences_IQR*1.5)
 differences_trimmed <- differences[(differences>differences_lbound) & (differences<differences_ubound)]
 plot (hist(differences_trimmed))
 require(MASS)
+#test na rozkład wykładniczy
 fit <- fitdistr(differences_trimmed, "exponential")
 ks.test(differences_trimmed, "pexp", fit$estimate)
 #kontrola poprawności wykonywania testu
@@ -58,3 +59,21 @@ ks.test(control, "pexp", fit2$estimate)
 #proba testu chi kwadrat
 tmp <-rexp(length(differences_trimmed), rate = differences_trimmed_rate)
 chisq.test(differences_trimmed, p = tmp/sum(tmp))
+#test na rozkład gamma
+egamma(differences_trimmed)
+ks.test(differences_trimmed, "pgamma", shape = 0.5428031, scale = 75.4269334)
+#sprawdzenie poprawności testu
+tmp <- rgamma(length(differences_trimmed), shape = 0.5428031, scale = 75.4269334)
+chisq.test(differences_trimmed, p = tmp/sum(tmp))
+
+#obliczanie danych o rzadko oczekiwanych etypes
+records_with_exotic_etypes <- file_full$date[file_full$etypes != "(1 etypes {1})"]
+tmp <- table (strftime(as.POSIXct(records_with_exotic_etypes, origin="1970-01-01"), "%Y/%m/%d" ))
+tmp_df <- as.data.frame(table (strftime(as.POSIXct(records_with_exotic_etypes, origin="1970-01-01"), "%Y/%m/%d" )))
+exotic_dates <- data.frame(date=seq.Date(from = as.Date(as.POSIXct(1222194821, origin="1970-01-01")), to = as.Date(as.POSIXct(1454577728, origin="1970-01-01")), by=1), count=0 )
+tmp2 <- data.frame(date=tmp_df$Var1, count=tmp_df$Freq)
+tmp0 <- merge(x=exotic_dates, y=tmp2, by="date", all.x = TRUE, all.y = TRUE)
+tmp0$count.y[is.na(tmp0$count.y)] <- 0
+tmp0$count.x[is.na(tmp0$count.x)] <- 0
+tmp0$freq <- tmp0$count.x + tmp0$count.y
+final_exotic <- data.frame(date=tmp0$date, freq=tmp0$freq)

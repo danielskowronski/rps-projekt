@@ -54,6 +54,8 @@ Następnie skonwertowaliśmy authtime na obiekt R'a POSIXct, a następnie wygene
 
 Na tym poziomie nie usuwamy żanych danych - będziemy to robić podczas analizy konkretnych problemów, ponieważ dla różnych problemów mogą być różne progi wartości odstających. Np. jeśli chcemy analizować ilość logowań w danym miesiącu to miesiące niepełne (brzegowe - wrzesień 2008 i luty 2016) zostałyby odrzucone. Odrzucilibyśmy w ten sam sposób kilkanaście pełnych dni, które dla analizy według dni są jak najbardziej poprawne. 
 
+Zastosowaliśmy usuwanie wartośći odstających dla wektora czasów między kolejnymi dostępami do systemu-ze wzgledu na charakterystykę takich danych, oraz wygląd wykresu wektora differences.
+
 5.	Agregacja i transformacja danych (5p)
 opisać czy agregacja danych jest konieczna, a jeśli tak, to jak agregować dane i co dzięki temu osiągniemy; opisać inne niezbędne przekształcenia danych (np. stworzenie wartości liczby dni na podstawie dwóch pól z datą: "od" i "do", zamiana danych liczbowych na kategoryjne, wyliczanie wartości pochodnych, np. pole=wysokość*szerokość itp.), wraz z uzasadnieniem konieczności ich przeprowadzenia; opisać wszelkie niezbędne syntaktyczne transformacje danych, tzn. ich przekształcanie bez zmiany ich znaczenia wraz z uzasadnieniem; przedstawić w czytelnej, graficznej postaci proces tej wstępnej obróbki danych opisanej w punktach 4-5.
 
@@ -61,11 +63,6 @@ opisać czy agregacja danych jest konieczna, a jeśli tak, to jak agregować dan
 Agregacja potrzebna jest dla każdego problemu z osobna - np. celem analizy najpopularniejszych godzin logowania dokonujemy takowej wg. pola godziny z obiektu POSIXct. Zagregowaliśmy czasy logowań według godzin, dni roku, dni tygodnia, miesiecy i lat, etypes oraz adresów IP i z takich danych stworzyliśmy wykresy.
 
 Utowrzyliśmy również wektor czasów pomiędzy logowaniami do systemu 
-[
-shift <- function (x, shift) c(rep(NA,times=shift), x[1:(length(x)-shift)])
-differences <- file_full$authtime - shift(file_full$authtime, 1)
-plot (differences)
-]
 
 6.	Eksploracja danych (8p)
 statystyki opisowe (również w formie graficznej), histogramy, rozkłady wartości dla poszczególnych cech, zmiana wartości danych w czasie, korelacje pomiędzy atrybutami oraz próba wyjaśnienia ich pochodzenia, odkrywanie innego rodzaju zależności, np. trendów
@@ -79,14 +76,16 @@ logowania według lat [wzrost liczby logowań-rozkład normalny?]
 logowania według dni tygodnia
 logowania według godzin 
 encoding typów
-czasy między logowaniami [tutaj będzie hipoteza o wykładniczym rozkładzie, pewnie odrzucenie wartości odstających (IQR)]
+czasy między logowaniami
 
 7.	Hipotezy badawcze (10p)
 na podstawie analiz z punktów 3-6 oraz zrozumienia dziedziny biznesowej problemu, jakiego zbiór danych dotyczy, opisać jakiego rodzaju problemy mogą być poddane badaniu i jakie hipotezy badawcze można postawić (np.: hipoteza o wartości parametru populacji, o określonym typie rozkładu danej cechy, o korelacji i innego rodzaju zależnościach itp.); w przypadku hipotez o rozkładach uzasadnić postawienie hipotezy zarówno podpierając się analizami z punktu 6, jak i ogólną teorią mówiącą, że danego typu zdarzenia powinny podlegać określonym rozkładom (np. czas między zgłoszeniami do systemu zwykle ma rozkład wykładniczy, liczba zdarzeń rzadkich w systemie - rozkład Poissona, wzrost w populacji ludzi - rozkład normalny itp.)
 
 ...
 
-Na podstawie wyglądu wykresu differences_trimmed, oraz faktu, że zawiera on czasy między kolejnymi zgłoszeniami do systemu, przyjmujemy hipotezę, że dane te mają rozkład wykładniczy(H0=rozkład differences_trimmed jest wykłądniczy).
+Na podstawie wyglądu wykresu differences_trimmed, oraz faktu, że zawiera on czasy między kolejnymi zgłoszeniami do systemu, przyjmujemy hipotezę, że dane te mają rozkład wykładniczy(H0=rozkład differences_trimmed jest wykładniczy; HA=rozkład differences_trimmed nie jest wykładniczy).
+
+Wykres oczekiwanych etypes sugeruje, że rzadko oczekiwane są etypes inne niż {1} . Można wiec przyjąć hipotezę, że ilość żądań o etypes inne niż {1} w kolejnych dniach ma rozkład Poissona (H0=oczekiwanie etypes innych niż {1} ma rozkład Poissona; HA=oczekiwanie etypes innych niż {1} nie ma rozkładu Poissona).
 
 
 8.	Weryfikacja hipotez (10p)
@@ -96,6 +95,7 @@ opisać zastosowane testy statystyczne (parametryczne oraz nieparametryczne), wr
 
 Dla danych zgromadzonych w wektorze differences_trimmed zastosowaliśmy test Kolmogorov-Smirnov-ze względu na charakterystykę danych test Chi kwadrat mógł nie dać wiarygodnych wyników-potwierdził to pakiet R zwracając informację: "In chisq.test(differences_trimmed/sum(differences_trimmed), p = tmp/sum(tmp)) : Chi-squared approximation may be incorrect". Mimo danych i wykresu sugerujących rozkłąd wykładniczy, test statystyczny nie pozwolił przyjąć że hipoteza zerowa (H0=rozkład differences_trimmed jest wykłądniczy) jest prawdziwa.
 Poprawność wykonywania tego testu potwierdziliśmy na danych kontrolnych-odpowiednio wysokie p-value wskazuje, że losowo wygenerowany rozkład wykłądniczy zostaje potwierdzony przez tą samą procedurę. 
+Ponieważ poprzedni test nie potwierdził rozkładu wykładniczego danych postanowiliśmy również sprawdzić czy dane mają rozkład gamma. Również w tym przypadku niskie p-value nie pozwoliło przyjąć hipotezy zerowej (H0=dane mają rozkład gamma).
 
 9.	Wnioski (5p)
 wykorzystując obserwacje i analizy z poprzednich punktów opisać wnioski z badań, ale językiem biznesowym, czyli językiem dziedziny, której dotyczą dane (np. dane logów z serwera mogą dotyczyć zachowań użytkowników tego serwera; dane ze sklepu - zachowań klientów itd.)
