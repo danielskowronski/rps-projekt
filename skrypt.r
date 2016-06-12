@@ -1,4 +1,4 @@
-# ustawianie nazwy pliku z danymi 
+# ustawianie nazwy pliku z danymi
 filename_full <- "C:\\Users\\Krzysiek\\Documents\\rps_projekt\\rps-projekt\\wyczyszczone_dane.csv"
 
 # ładowanie pliku csv do listy
@@ -13,7 +13,7 @@ plot(hist(dates, breaks="days"))
 plot(hist(dates, breaks="months"))
 plot(hist(dates, breaks="years"))
 
-# agregacja czasów logowań po godzinie 
+# agregacja czasów logowań po godzinie
 dates_hours <- format(datetimes, "%H")
 barplot(prop.table(table(dates_hours)))
 
@@ -49,7 +49,6 @@ differences_ubound <- differences_Q3+(differences_IQR*1.5)
 differences_trimmed <- differences[(differences>differences_lbound) & (differences<differences_ubound)]
 plot (hist(differences_trimmed))
 require(MASS)
-#test na rozkład wykładniczy
 fit <- fitdistr(differences_trimmed, "exponential")
 ks.test(differences_trimmed, "pexp", fit$estimate)
 #kontrola poprawności wykonywania testu
@@ -65,6 +64,18 @@ ks.test(differences_trimmed, "pgamma", shape = 0.5428031, scale = 75.4269334)
 #sprawdzenie poprawności testu
 tmp <- rgamma(length(differences_trimmed), shape = 0.5428031, scale = 75.4269334)
 chisq.test(differences_trimmed, p = tmp/sum(tmp))
+
+#obliczanie danych o rzadko oczekiwanych etypes
+records_with_exotic_etypes <- file_full$date[file_full$etypes != "(1 etypes {1})"]
+tmp <- table (strftime(as.POSIXct(records_with_exotic_etypes, origin="1970-01-01"), "%Y/%m/%d" ))
+tmp_df <- as.data.frame(table (strftime(as.POSIXct(records_with_exotic_etypes, origin="1970-01-01"), "%Y/%m/%d" )))
+exotic_dates <- data.frame(date=seq.Date(from = as.Date(as.POSIXct(1222194821, origin="1970-01-01")), to = as.Date(as.POSIXct(1454577728, origin="1970-01-01")), by=1), count=0 )
+tmp2 <- data.frame(date=tmp_df$Var1, count=tmp_df$Freq)
+tmp0 <- merge(x=exotic_dates, y=tmp2, by="date", all.x = TRUE, all.y = TRUE)
+tmp0$count.y[is.na(tmp0$count.y)] <- 0
+tmp0$count.x[is.na(tmp0$count.x)] <- 0
+tmp0$freq <- tmp0$count.x + tmp0$count.y
+final_exotic <- data.frame(date=tmp0$date, freq=tmp0$freq)
 
 #ilość różnych adresów IP
 df <- file_full
@@ -101,19 +112,16 @@ agg <- subset(agg, ip>q[1]-1.5*IQR(agg$ip) & ip<q[3]+1.5*IQR(agg$ip))
 agg$day <- as.POSIXct(agg$day, format = "%y-%m-%d")
 agg$month <- format(agg$day, "%m")
 agg <- aggregate(agg$ip,  by = list(agg$month), FUN = mean)
-barplot(agg$x, type="h", col=rgb(0,1,0,0.5), ylim=c(0,4))
+agg_bez<-agg
+agg <- aggregate(data=df, ip ~ day, function(x) length(x)/length(unique(x)))
+q <- quantile(agg, names=ip)
+agg <- subset(agg, ip>q[1]-1.5*IQR(agg$ip) & ip<q[3]+1.5*IQR(agg$ip))
+agg$day <- as.POSIXct(agg$day, format = "%y-%m-%d")
+agg$month <- format(agg$day, "%m")
+agg <- aggregate(agg$ip,  by = list(agg$month), FUN = mean)
+barplot(agg$x, type="h", col=rgb(0,1,0,0.5), ylim=c(0,4.005210))
+par(new=TRUE)
+barplot(agg_bez$x, type="h", col=rgb(1,0,0,0.5), ylim=c(0,150.80976))
 
 
 #jeszcze ip/user
-
-#obliczanie danych o rzadko oczekiwanych etypes
-records_with_exotic_etypes <- file_full$date[file_full$etypes != "(1 etypes {1})"]
-tmp <- table (strftime(as.POSIXct(records_with_exotic_etypes, origin="1970-01-01"), "%Y/%m/%d" ))
-tmp_df <- as.data.frame(table (strftime(as.POSIXct(records_with_exotic_etypes, origin="1970-01-01"), "%Y/%m/%d" )))
-exotic_dates <- data.frame(date=seq.Date(from = as.Date(as.POSIXct(1222194821, origin="1970-01-01")), to = as.Date(as.POSIXct(1454577728, origin="1970-01-01")), by=1), count=0 )
-tmp2 <- data.frame(date=tmp_df$Var1, count=tmp_df$Freq)
-tmp0 <- merge(x=exotic_dates, y=tmp2, by="date", all.x = TRUE, all.y = TRUE)
-tmp0$count.y[is.na(tmp0$count.y)] <- 0
-tmp0$count.x[is.na(tmp0$count.x)] <- 0
-tmp0$freq <- tmp0$count.x + tmp0$count.y
-final_exotic <- data.frame(date=tmp0$date, freq=tmp0$freq)
