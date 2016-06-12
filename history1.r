@@ -55,3 +55,8 @@ dates_hours <- format(datetimes, "%H")
 plot(hist(dates_hours))
 barplot(prop.table(table(dates_hours)))
 savehistory("~/rps_projekt/history1.r")
+
+
+> png("obrazki/czestosci_daty.png", width=1500, height=500)
+> plot(hist(dates, breaks="days"))
+> dev.off()

@@ -1,5 +1,5 @@
 # ustawianie nazwy pliku z danymi
-filename_full <- "C:\\Users\\Krzysiek\\Documents\\rps_projekt\\rps-projekt\\wyczyszczone_dane.csv"
+filename_full <- "wyczyszczone_dane.csv"
 
 # ładowanie pliku csv do listy
 file_full <- read.csv(filename_full)
@@ -9,9 +9,9 @@ dates <- as.Date(as.POSIXct(file_full$date, origin="1970-01-01"))
 datetimes <- as.POSIXct(file_full$date, origin="1970-01-01")
 
 # agregcj dat logowań po datach (uniklnych dniach), miesiącach i latach
-plot(hist(dates, breaks="days"))
-plot(hist(dates, breaks="months"))
-plot(hist(dates, breaks="years"))
+hist(dates, breaks="days")
+hist(dates[dates>"2008-09-30" & dates<"2016-02-01"], breaks="months")
+hist(dates[dates>"2008-12-31" & dates<"2016-01-01"], breaks="years")
 
 # agregacja czasów logowań po godzinie
 dates_hours <- format(datetimes, "%H")
@@ -99,9 +99,9 @@ agg$wday <- format(agg$day, "%u")
 agg <- aggregate(agg$ip,  by = list(agg$wday), FUN = mean)
 
 #czerwone po znormalizowaniu, zielone bez znormalizowania; odpalać 3 kolejne linie i dopiero wykres
-barplot(agg$x, type="h", col=rgb(0,1,0,0.5), ylim=c(0,4))
+barplot(agg$x, type="h", col=rgb(1,0,0,0.5), ylim=c(0,4))
 par(new=TRUE)
-barplot(agg_bez$x, type="h", col=rgb(1,0,0,0.5), ylim=c(0,55000))
+barplot(agg_bez$x, type="h", col=rgb(0,1,0,0.5), ylim=c(0,55000))
 
 agg_weekday<-agg
 
