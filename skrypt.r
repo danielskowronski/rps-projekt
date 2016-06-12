@@ -124,4 +124,40 @@ par(new=TRUE)
 barplot(agg_bez$x, type="h", col=rgb(1,0,0,0.5), ylim=c(0,150.80976))
 
 
-#jeszcze ip/user
+#z ilu IP każdy user
+agg <- aggregate(data=df, ip ~ user, function(x) length(unique(x)))
+barplot(agg$ip)
+var(agg$ip)
+mean(agg$ip)
+sd(agg$ip)
+
+#odcinamy
+q <- quantile(agg$ip)
+agg_norm <- subset(agg, ip>=3 & ip<q[3]+1.5*IQR(agg$ip))
+
+plot(density(agg$ip), col="red")
+par(new=TRUE)
+plot(density(agg_norm$ip), col="green")
+
+shapiro.test(agg_norm$ip)
+qqnorm(agg_norm$ip);qqline(agg_norm$ip)
+
+#normalizacja
+aggn <- agg
+aggn$ip <- (agg$ip-mean(agg$ip))/sd(agg$ip)
+X <- aggn$ip
+Y <- density(X)
+library(zoo)
+xt <- diff(Y$x)
+yt <- rollmean(Y$y,2)
+pole <- sum(xt*yt)
+100*(pole-1)/pole
+
+
+#odrzucanie - liczenie
+aggs <- sort(agg$ip)
+cnt <- length(aggs)
+#...
+x<-1000; qqnorm(aggs[0:-x]);qqline(aggs[0:-x])
+#...
+x/cnt
