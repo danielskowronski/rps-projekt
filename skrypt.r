@@ -1,4 +1,4 @@
-# ustawianie nazwy pliku z danymi 
+# ustawianie nazwy pliku z danymi
 filename_full <- "C:\\Users\\Krzysiek\\Documents\\rps_projekt\\rps-projekt\\wyczyszczone_dane.csv"
 
 # ładowanie pliku csv do listy
@@ -13,7 +13,7 @@ plot(hist(dates, breaks="days"))
 plot(hist(dates, breaks="months"))
 plot(hist(dates, breaks="years"))
 
-# agregacja czasów logowań po godzinie 
+# agregacja czasów logowań po godzinie
 dates_hours <- format(datetimes, "%H")
 barplot(prop.table(table(dates_hours)))
 
@@ -58,3 +58,43 @@ ks.test(control, "pexp", fit2$estimate)
 #proba testu chi kwadrat
 tmp <-rexp(length(differences_trimmed), rate = differences_trimmed_rate)
 chisq.test(differences_trimmed, p = tmp/sum(tmp))
+
+#ilość różnych adresów IP
+df <- file_full
+#po dniu tygodnia
+df$authtime <- as.POSIXct(file_full$date, origin="1970-01-01")
+df$day <- format(df$authtime, "%y-%m-%d")
+df$weekday <- format(df$authtime, "%u")
+agg <- aggregate(data=df, ip ~ day, function(x) length(unique(x)))
+agg_bez <- aggregate(data=df, ip ~ day, function(x) length(unique(x)))
+agg_bez$day <- as.POSIXct(agg_bez$day, format = "%y-%m-%d")
+agg_bez$wday <- format(agg_bez$day, "%u")
+agg_bez <- aggregate(agg_bez$ip,  by = list(agg_bez$wday), FUN = sum)
+
+#normalizacja bo w dzień z dużą liczbą logowań będzie dużo więcej IP
+agg <- aggregate(data=df, ip ~ day, function(x) length(x)/length(unique(x)))
+q <- quantile(agg, names=ip)
+agg <- subset(agg, ip>q[1]-1.5*IQR(agg$ip) & ip<q[3]+1.5*IQR(agg$ip))
+#wyciągamy dzień tygodnia
+agg$day <- as.POSIXct(agg$day, format = "%y-%m-%d")
+agg$wday <- format(agg$day, "%u")
+agg <- aggregate(agg$ip,  by = list(agg$wday), FUN = mean)
+
+#czerwone po znormalizowaniu, zielone bez znormalizowania; odpalać 3 kolejne linie i dopiero wykres
+barplot(agg$x, type="h", col=rgb(0,1,0,0.5), ylim=c(0,4))
+par(new=TRUE)
+barplot(agg_bez$x, type="h", col=rgb(1,0,0,0.5), ylim=c(0,55000))
+
+agg_weekday<-agg
+
+#po miesiącu
+agg <- aggregate(data=df, ip ~ day, function(x) length(unique(x)))
+q <- quantile(agg, names=ip)
+agg <- subset(agg, ip>q[1]-1.5*IQR(agg$ip) & ip<q[3]+1.5*IQR(agg$ip))
+agg$day <- as.POSIXct(agg$day, format = "%y-%m-%d")
+agg$month <- format(agg$day, "%m")
+agg <- aggregate(agg$ip,  by = list(agg$month), FUN = mean)
+barplot(agg$x, type="h", col=rgb(0,1,0,0.5), ylim=c(0,4))
+
+
+#jeszcze ip/user
