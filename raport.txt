@@ -54,6 +54,8 @@ Następnie skonwertowaliśmy authtime na obiekt R'a POSIXct, a następnie wygene
 
 Na tym poziomie nie usuwamy żanych danych - będziemy to robić podczas analizy konkretnych problemów, ponieważ dla różnych problemów mogą być różne progi wartości odstających. Np. jeśli chcemy analizować ilość logowań w danym miesiącu to miesiące niepełne (brzegowe - wrzesień 2008 i luty 2016) zostałyby odrzucone. Odrzucilibyśmy w ten sam sposób kilkanaście pełnych dni, które dla analizy według dni są jak najbardziej poprawne. 
 
+Zastosowaliśmy usuwanie wartośći odstających dla wektora czasów między kolejnymi dostępami do systemu-ze wzgledu na charakterystykę takich danych, oraz wygląd wykresu wektora differences.
+
 5.	Agregacja i transformacja danych (5p)
 opisać czy agregacja danych jest konieczna, a jeśli tak, to jak agregować dane i co dzięki temu osiągniemy; opisać inne niezbędne przekształcenia danych (np. stworzenie wartości liczby dni na podstawie dwóch pól z datą: "od" i "do", zamiana danych liczbowych na kategoryjne, wyliczanie wartości pochodnych, np. pole=wysokość*szerokość itp.), wraz z uzasadnieniem konieczności ich przeprowadzenia; opisać wszelkie niezbędne syntaktyczne transformacje danych, tzn. ich przekształcanie bez zmiany ich znaczenia wraz z uzasadnieniem; przedstawić w czytelnej, graficznej postaci proces tej wstępnej obróbki danych opisanej w punktach 4-5.
 
@@ -96,6 +98,7 @@ opisać zastosowane testy statystyczne (parametryczne oraz nieparametryczne), wr
 
 Dla danych zgromadzonych w wektorze differences_trimmed zastosowaliśmy test Kolmogorov-Smirnov-ze względu na charakterystykę danych test Chi kwadrat mógł nie dać wiarygodnych wyników-potwierdził to pakiet R zwracając informację: "In chisq.test(differences_trimmed/sum(differences_trimmed), p = tmp/sum(tmp)) : Chi-squared approximation may be incorrect". Mimo danych i wykresu sugerujących rozkłąd wykładniczy, test statystyczny nie pozwolił przyjąć że hipoteza zerowa (H0=rozkład differences_trimmed jest wykłądniczy) jest prawdziwa.
 Poprawność wykonywania tego testu potwierdziliśmy na danych kontrolnych-odpowiednio wysokie p-value wskazuje, że losowo wygenerowany rozkład wykłądniczy zostaje potwierdzony przez tą samą procedurę. 
+Ponieważ poprzedni test nie potwierdził rozkładu wykładniczego danych postanowiliśmy również sprawdzić czy dane mają rozkład gamma. Również w tym przypadku niskie p-value nie pozwoliło przyjąć hipotezy zerowej (H0=dane mają rozkład gamma).
 
 9.	Wnioski (5p)
 wykorzystując obserwacje i analizy z poprzednich punktów opisać wnioski z badań, ale językiem biznesowym, czyli językiem dziedziny, której dotyczą dane (np. dane logów z serwera mogą dotyczyć zachowań użytkowników tego serwera; dane ze sklepu - zachowań klientów itd.)
