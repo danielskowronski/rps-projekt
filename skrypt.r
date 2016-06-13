@@ -56,6 +56,7 @@ control <- abs(rnorm(10000))
 fit2 <- fitdistr(control, "exponential")
 ks.test(control, "pexp", fit2$estimate)
 #proba testu chi kwadrat
+differences_trimmed_rate = 1/mean(differences_trimmed)
 tmp <-rexp(length(differences_trimmed), rate = differences_trimmed_rate)
 chisq.test(differences_trimmed, p = tmp/sum(tmp))
 #test na rozkład gamma
@@ -76,6 +77,10 @@ tmp0$count.y[is.na(tmp0$count.y)] <- 0
 tmp0$count.x[is.na(tmp0$count.x)] <- 0
 tmp0$freq <- tmp0$count.x + tmp0$count.y
 final_exotic <- data.frame(date=tmp0$date, freq=tmp0$freq)
+plot (final_exotic)
+czestotliwosc = sort(final_exotic$freq, decreasing = TRUE)
+lambda.est <- mean(czestotliwosc)
+plot (czestotliwosc)
 
 #ilość różnych adresów IP
 df <- file_full

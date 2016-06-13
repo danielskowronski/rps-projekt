@@ -72,7 +72,7 @@ Na podstawie analizy powyższego wykresu można było odciąć wartości odstaj�
 
 ![Histogram sumarycznej ilości logowań w kolejnych miesiącach. ](obrazki/czestosci_miesiace.png)
 
-![Histogram sumarycznej ilości logowań w kolejnych latach. ](obrazki/czestosci_lata.png)
+![Histogram sumarycznej ilości logowań w kolejnych latach. Wyraźnie widać trend rosnący w ilości logowań, można próbować to wytłumaczyć coraz bardziej powszechnym dostępem do internetu (choć być może w ostatnich latach czynnik ten nie gra aż tak dużej roli), większą ilością urządzeń z których korzystają użytkownicy systemu, ale pewnie i coraz większą ilością materiałów zgromadzonych w systemie. ](obrazki/czestosci_lata.png)
 
 ![Histogram sumarycznej ilości logowań w poszczególnych godzinach - widoczna pora nocna oraz nieco wyższe wartości o godzinie 11 - prawdopodobnie porze rozpoczynania zajęć. ](obrazki/czestosci_godziny.png)
 
@@ -105,6 +105,9 @@ Na podstawie wyglądu wykresu differences_trimmed, oraz faktu, że zawiera on cz
 ##### Hipoteza (2)
 Badamy ilość adresów IP z jakich logował się każdy użytkownik. Ponieważ jest to zjawisko naturalne stawiamy hipotezę iż rozkład tych wartości jest normalny. Dane obcinamy metodą 1.5 IQR z góry celem odrzucenia użytkowników którym się chyba nudzi i studiują za długo, natomiast z dołu stałą=2 (ponieważ można przyjąć iż każdy student zalogował się przynajmniej raz z uczelni) - odrzuci to użytkowników którzy prawdopodobnie zalogowali sie tylko z uczelni. Użycie półtora IQR z dołu zaakceptowało wszystkie wartości (pierwszy kwantyl - 1.5*IQR < 0).
 
+##### Hipoteza (3)
+Na podstawie wykresu z Fig.6 widzimy, że liczba logowań oczekujących etypes innych niż {1} jest relatywnie niska. Możemy zatem przyjąć, że są to zjawiska rzadkie, a ich ilość w kolejnych dniach jest modelowana rozkładem Poissona.
+
 ### 8.	Weryfikacja hipotez (10p)
 *opisać zastosowane testy statystyczne (parametryczne oraz nieparametryczne), wraz z weryfikacją ich założeń oraz ich wyniki i interpretację tych wyników w odniesieniu do postawionych hipotez badawczych; uzasadnić zastosowanie określonych testów*
 
@@ -120,10 +123,32 @@ Po wykonaniu testu *Shapiro-Wilk'a* parametr W wyniósł **85%**. Dla porównani
 
 Analiza wykresu gęstości ujawnia dość duży ogon wartości wysokich - zakładamy że są to użytkownicy korzystający z ISP który udziela dzierżaw DHCP o bardzo krótkim terminie ważności. Żeby oszacować udział tych użytkowników postanowiliśmy iterować się po ilości wartości odcinanych z góry tak by wykres gęstości (znormalizowany qqnorm) w kwantylach >25% był jak najbliższy idealnemu (qqline). Szacunkowa ilość to 1000 - około 21%.
 
+##### Hipoteza (3)
+W celu weryfikacji H0=(liczba logowań oczekujących etypes innych niż {1} w kolejnych dniach ma rozkład Poissona) najpierw potrzebujemy stworzyć odpowiednie dane. Po ich utworzeniu robimy z nich wykres (zgodnie z zaleceniem wykładowcy: ~"zanim zaczniesz analizować dane, zobacz je"): 
+![Wykres ilości oczekiwań etypes innych niz {1} według dni. ](obrazki/czestosci_nietypowych_etypes.png)
+Wykres ten pokazuje ponad trzyletni prawie całkowity brak nietypowych etypes. Już w tym miejscu mamy sugestię, że dane mogą nie dać sie modelować z uzyciem teoretycznego rozkładu.
+Mimo wszystko idziemy jednak dalej, i generujemy wykres czestotliwości:
+![Wykres czestotliwości oczeiwania nietypowych etypes. ](obrazki/czestosci_nietypowych_etypes_sorted.png)
+Lambda obliczona z tych danych wynosi 24.76414622, wykres rozkładu Poissona z takim parametrem wyraźnie różni się od danych przez nas uzyskanych, w związku z czym pozwalamy sobie odrzucić hipotezę zerową na podstawie obserwacji danych.
+
+
 ### 9.	Wnioski (5p)
 *wykorzystując obserwacje i analizy z poprzednich punktów opisać wnioski z badań, ale językiem biznesowym, czyli językiem dziedziny, której dotyczą dane (np. dane logów z serwera mogą dotyczyć zachowań użytkowników tego serwera; dane ze sklepu - zachowań klientów itd.)*
 
 ...
 
+Analiza logów dostępu do systemu pokazuje m.in. jego stabilność. Nie ma nagłych, dużych spadków w liczbie logowań do systemu które mogłyby wskazywać na problemy z jego funkcjonowaniem. Wykresy z punktu 6. pokazują trendy, jakich możnaby się spodziewać po systemie uczelnianym-wyraźnie widać spadki w liczbie dostępów przez: 3 miesiące wakacyjne, ferie (miesiąc, w którym przypadają ferie ma wyraźnie mniej dostępów), oraz w weekendy. Przy okazji weekendów warto również wspomnieć o liczbie unikalnych adresów ip w przeciągu dni tygodnia-w dniach pn-pt jest ich mniej względem weekendów, ma na to najprawdopodobniej wpływ logowanie z sieci wydziałowej przez studentów mających zajęcia w dniach pn-pt (sieć ta prawdopodobnie posiada pulę kilku adresów ip, i to one są widoczne w logach), w weekendy studenci logują sie rzadziej, a jeśli to robią to głównie poza budynkiem wydziału.
+
+Jedną mocno zaskakująca rzeczą na jaką natrafiliśmy jest wykres powstały w czasie weryfikacji hipotezy 3-liczba logowań oczekujących etypes innych niż {1}. W dniach pomiędzy początkiem roku 2010, a druga połową 2013 dostępów oczekujących takich etypes praktcznie nie było. Jako, że liczba ta zmienia się nagle jedynym sensownym założeniem będzie przyjęcie, że spowodowała to zmiana po stronie systemu, a nie użytkowników. Być może miała na to wpływ konfiguracja infrastruktury (np. firewalla), która spowodowała zablokowanie oczekiwania nietypowych etypes z zewnątrz sieci wydziałowej. Tłumaczyłoby to również widoczne na wykresie pojedyncze przypadki uzycia takich etypes w wymienionym wcześniej okresie, przypuszczamy, że są to dostępy z wewnątrz sieci, które nie zostały przefiltrowane przez odpowiednio inaczej skonfigurowaną infrastrukturę.
+
+Lekkim zaskoczeniem był również wynik testowania hipotezy 1, czasy pomiędzy kolejnymi dostępami do systemu, które zwykle są książkowym wręcz przykładem na dane modelowane rozkładem wykładniczym, okazały się nie mieć takiego rozkładu. Być może wpływ na to ma charakterystyka sieci wydziałowej-to co opisane wcześniej-dużo mniejszy ruch w wakacje, ferie, weekendy, jak również w nocy. Dopuszczamy możliwość, że odpowiednio wyselekcjonowana część logów (np. logi z tylko jednej konkretnej godziny, z dni roboczych, z miesiecy niewakacyjno-feriowych itd) miałaby tą właściwość. Jednak taka próbka nie byłaby reprezentatywna, co według nas przekreślałoby sens jej analizowania, biorąc pod uwagę, że chcemy analizować ruch całościowo.
+
+Niezaskakujące natomiast były wnioski wynikające z zachowania studentów-niskie liczby logowań w weekendy, wakacje, ferie oraz adresy ip z jakimi sie logowali (w weekendy ip bardziej zróżnicowane-przypuszczamy, że podobny trend znaleźlibyśmy podczas wakacji czy ferii, oraz godzin nocnych).
+Również kolumna etypes sugeruje, że pośród studentów istnieje grupa małopopulanych programów używanych do dostępu do systemu-większość programów (możliwe, że nawet tylko jeden, nie mamy danych pozwalających to ocenić) oczekuje wyłącznie des-cbc-crc. Pozostałe programy (lub program, nie ma to znaczenia, tak czy inaczej odsetek jego/ich uzycia jest wyraźnie niższy), które można rozpoznać po innych oczekiwanych etypach mają niewielki udział. Zakładamy tutaj, że nawet jeśli któreś programy pozwalają na konfigurację tego ustawienia, to większość użytkowników nie korzystałaby z tej możliwości, więc jej wpływ na wnioski można uznać za pomijalny.
+
 ### 10.	Uwagi
 *wszelkie inne wykonane aktywności niewymienione w poprzednich punktach*
+
+...
+
+Charakterystyka danych pozwala bardziej na wyciąganie wniosków z danych (zwykle po odpowiedniej agregacji/odrzuceniu wartości odstających) niż przyjmowanie hipotez. Stosunkowo ciężko jest dopasować model teoretyczny do danych takie jakie otrzymaliśmy (często po prostu nie pasują). Natomiast analiza danych, biorąca pod uwagę informacje nie znajdujące się w danych (analizowany system uzywany jest przez wydział uniwersytetu, ogólnie znane MO studentów itp.), oraz naszą wiedzę z odpowiednich dziedzin IT pozwala na wyciąganie interesujących wniosków. Uwagi te znajdują odzwierciedlenie w punktach <10 naszego raportu.
